@@ -1,10 +1,13 @@
+// 🌍 Initialize the Leaflet map centered at coordinates [20, 0] with zoom level 2
 let map = L.map("map").setView([20, 0], 2);
+
+// 🗺️ Add OpenStreetMap tile layer to the map
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 18,
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-// Create a marker cluster group
+// 📍 Create a marker cluster group for better visualization of dense markers
 let markers = L.markerClusterGroup({
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: false,
@@ -12,26 +15,37 @@ let markers = L.markerClusterGroup({
   maxClusterRadius: 80, // Maximum radius that a cluster will cover from the central marker
 });
 
-let crashData = [];
-let chart;
-let timelineChart;
+// 📊 Global variables to store crash data and chart instances
+let crashData = []; // Stores all loaded crash data
+let chart;          // Main analytics chart instance
+let timelineChart;  // Timeline chart instance (currently unused)
 
+/**
+ * 📥 Asynchronously load crash data from JSON file and initialize visualization
+ * @returns {Promise<void>} Resolves when data is loaded and visualization is initialized
+ */
 async function loadData() {
+  console.log("🔍 Loading crash data...");
   const res = await fetch("data/crashes.json");
   crashData = await res.json();
+  console.log(`✅ Loaded ${crashData.length} crash records`);
   renderMarkers(crashData);
   updateAnalytics(crashData);
   updateTimeline(crashData);
 }
 
+/**
+ * 🎯 Render crash markers on the map with color-coded severity
+ * @param {Array} data - Array of crash data objects
+ */
 function renderMarkers(data) {
-  // Clear existing markers
+  // Clear existing markers from the map
   markers.clearLayers();
   
-  // Create markers for each crash
+  // Create markers for each crash with color based on fatality count
   data.forEach((crash) => {
     if (crash.Latitude && crash.Longitude) {
-      // Create a circle marker with color based on fatalities
+      // Determine marker color based on fatality count
       const fatalityCount = crash.Fatalities || 0;
       let color = "green"; // Default color for low fatalities
       
@@ -43,8 +57,12 @@ function renderMarkers(data) {
         color = "yellow";
       }
       
+      // Calculate marker size based on fatalities (min 5, max 15)
+      const markerSize = Math.max(5, Math.min(15, fatalityCount / 10));
+      
+      // Create circle marker with visual properties based on fatalities
       const marker = L.circleMarker([crash.Latitude, crash.Longitude], {
-        radius: Math.max(5, Math.min(15, fatalityCount / 10)), // Size based on fatalities
+        radius: markerSize,
         fillColor: color,
         color: "#000",
         weight: 1,
@@ -68,7 +86,13 @@ function renderMarkers(data) {
   map.addLayer(markers);
 }
 
-// Function to fetch weather data for a specific location and time
+/**
+ * ☁️ Fetch weather data for a specific crash location (demo implementation)
+ * @param {number} lat - Latitude coordinate
+ * @param {number} lon - Longitude coordinate
+ * @param {string} year - Year of the crash
+ * @param {string} locationId - Unique identifier for the location
+ */
 async function fetchWeatherData(lat, lon, year, locationId) {
   try {
     // For demo purposes, we're using current weather API
@@ -100,16 +124,22 @@ async function fetchWeatherData(lat, lon, year, locationId) {
   }
 }
 
+/**
+ * 📊 Update analytics dashboard with crash statistics
+ * @param {Array} data - Array of crash data objects
+ */
 function updateAnalytics(data) {
+  // Calculate summary statistics
   const total = data.length;
   const totalFatal = data.reduce((sum, d) => sum + (d.Fatalities || 0), 0);
   const avgFatal = total ? (totalFatal / total).toFixed(1) : 0;
 
+  // Update DOM elements with statistics
   document.getElementById("count").textContent = total;
   document.getElementById("fatalities").textContent = totalFatal;
   document.getElementById("avg").textContent = avgFatal;
 
-  // Chart - crashes by decade
+  // Group crashes by decade for chart visualization
   const grouped = {};
   data.forEach((d) => {
     const decade = Math.floor(d.Year / 10) * 10;
@@ -119,7 +149,10 @@ function updateAnalytics(data) {
   const labels = Object.keys(grouped).sort();
   const values = labels.map((l) => grouped[l]);
 
+  // Destroy existing chart if it exists
   if (chart) chart.destroy();
+  
+  // Create new bar chart showing crashes per decade
   chart = new Chart(document.getElementById("chart"), {
     type: "bar",
     data: {
@@ -140,22 +173,24 @@ function updateAnalytics(data) {
   });
 }
 
-// Apply filter function
+/**
+ * 🎛️ Apply user-defined filters to crash data
+ */
 function applyFilters() {
+  // Get filter values from UI elements
   const minY = +document.getElementById("yearMin").value || 0;
   const maxY = +document.getElementById("yearMax").value || 9999;
   const type = document.getElementById("typeFilter").value;
   const region = document.getElementById("regionFilter").value.toLowerCase();
   const minF = +document.getElementById("fatalFilter").value || 0;
   
-  // Weather filters
+  // Weather filters (not fully implemented in this demo)
   const precipitation = document.getElementById("precipitationFilter").value;
   const minWind = +document.getElementById("windMin").value || 0;
   const maxWind = +document.getElementById("windMax").value || 999;
   const maxVisibility = +document.getElementById("visibilityFilter").value || 999;
 
-  // Note: In a real implementation, you would filter based on actual weather data
-  // For this demo, we're just showing how the filter would work
+  // Filter crash data based on user inputs
   const filtered = crashData.filter(
     (c) =>
       c.Year >= minY &&
@@ -166,25 +201,36 @@ function applyFilters() {
       // Weather filters would be applied here in a full implementation
   );
 
+  // Update visualization with filtered data
   renderMarkers(filtered);
   updateAnalytics(filtered);
 }
 
-// Reset filter function
+/**
+ * 🔄 Reset all filters to default values
+ */
 function resetFilters() {
+  // Reset filter input fields
   document.getElementById("yearMin").value = "";
   document.getElementById("yearMax").value = "";
   document.getElementById("typeFilter").value = "All";
   document.getElementById("regionFilter").value = "";
   document.getElementById("fatalFilter").value = "";
   
+  // Re-render with original data
   renderMarkers(crashData);
   updateAnalytics(crashData);
 }
 
-// Event listeners
+// 🎯 Future enhancement placeholder function
+function futureEnhancement() {
+  // Reserved for future functionality
+  // Will implement advanced filtering options
+}
+
+// 📡 Event listeners for filter buttons
 document.getElementById("applyFilter").addEventListener("click", applyFilters);
 document.getElementById("resetFilter").addEventListener("click", resetFilters);
 
-// Load data when page loads
+// 🚀 Initialize the application when page loads
 loadData();
