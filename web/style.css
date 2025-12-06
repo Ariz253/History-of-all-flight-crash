@@ -77,6 +77,11 @@ button:hover {
   width: calc(50% - 2.5px);
 }
 
+#detail-location, #detail-year, #detail-type, #detail-fatalities, #detail-country, #detail-coordinates {
+  font-weight: 600;
+  color: #007bff;
+}
+
 h2 {
   color: #333;
   margin-top: 0;

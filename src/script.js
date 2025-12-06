@@ -88,6 +88,8 @@ function renderMarkers(data) {
         Country: ${crash.Country}<br>
         <div id="weather-info-${crash.Year}-${crash.Location.replace(/\s+/g, '-')}">Loading weather data...</div>
         <button onclick="fetchWeatherData(${crash.Latitude}, ${crash.Longitude}, '${crash.Year}', '${crash.Location.replace(/\s+/g, '-')}')">Load Weather</button>
+        <br><br>
+        <button onclick="showCrashDetails(${JSON.stringify(crash).replace(/"/g, '&quot;')})">View Details</button>
       `);
       
       markers.addLayer(marker);
