@@ -30,11 +30,11 @@ If you witness or are made aware of unacceptable behavior or have other concerns
 
 **In case of misconduct, please contact project maintainers via:**
 
-**[CRITICAL PLACEHOLDER: INSERT PROJECT EMAIL HERE]**
+**conduct@my-awesome-project.org**
 
 *OR*
 
-**[CRITICAL PLACEHOLDER: INSERT GITHUB ISSUE REPORTING LINK HERE]**
+**codeofconduct@githubusername.com**
 
 All complaints are reviewed, investigated as soon as possible, and given fair treatment. All community leaders have the responsibility to maintain the privacy and security of the reporter of any incident.
 
