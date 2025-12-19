@@ -19,7 +19,21 @@
             --shadow-color: rgba(0, 0, 0, 0.4);
         }
         body {
-            background-color: var(--bg-main);
+            <nav class="navbar">
+  <div class="logo">Flight Crash History</div>
+
+  <!-- Hidden checkbox to toggle menu -->
+  <input type="checkbox" id="menu-toggle" />
+  <label for="menu-toggle" class="hamburger">☰</label>
+
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">Data</a></li>
+    <li><a href="#">Analysis</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</nav>
+background-color: var(--bg-main);
             color: var(--text-primary);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;

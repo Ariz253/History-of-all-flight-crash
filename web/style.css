@@ -208,3 +208,93 @@ tr:hover {
   font-weight: bold;
   color: #cd7f32; /* bronze */
 }
+/* Navbar Base */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #004080;
+  padding: 10px 20px;
+  color: white;
+  position: relative;
+  z-index: 1000;
+}
+
+.navbar .logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+}
+
+.nav-links li a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+/* Hamburger (hidden by default) */
+.hamburger {
+  display: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Hide the checkbox */
+#menu-toggle {
+  display: none;
+}
+
+/* Responsive: Tablets & phones */
+@media (max-width: 1024px) {
+  .nav-links {
+    gap: 15px;
+  }
+}
+
+/* Small devices <768px */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 200px;
+    background-color: #004080;
+    padding: 15px;
+    border-radius: 4px;
+    display: none; /* hidden by default */
+  }
+
+  /* Show menu when checkbox is checked */
+  #menu-toggle:checked + .hamburger + .nav-links {
+    display: flex;
+  }
+
+  .nav-links li {
+    margin: 10px 0;
+  }
+}
+
+/* Extra small devices <480px */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 8px 12px;
+  }
+  .nav-links {
+    width: 160px;
+    top: 50px;
+    padding: 10px;
+  }
+  .nav-links li a {
+    font-size: 14px;
+  }
+}
