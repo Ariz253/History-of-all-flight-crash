@@ -64,11 +64,57 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    try:
-        df = pd.read_csv('data/dataset.csv.csv', encoding="utf-8")
-    except:
-        df = pd.read_csv('data/dataset.csv.csv', encoding="latin1")
+    import os
     
+    # List of possible file paths to try
+    possible_paths = [
+        'data/dataset.csv.csv',
+        'data/dataset.csv',
+        'dataset.csv.csv',
+        'dataset.csv',
+        './data/dataset.csv.csv',
+        './data/dataset.csv'
+    ]
+    
+    df = None
+    for path in possible_paths:
+        try:
+            if os.path.exists(path):
+                df = pd.read_csv(path, encoding="utf-8")
+                print(f"✅ Successfully loaded data from: {path}")
+                break
+        except UnicodeDecodeError:
+            try:
+                df = pd.read_csv(path, encoding="latin1")
+                print(f"✅ Successfully loaded data from: {path} with latin1 encoding")
+                break
+            except:
+                continue
+        except Exception as e:
+            print(f"⚠️ Failed to load from {path}: {str(e)}")
+            continue
+    
+    if df is None:
+        # If no file found, create a minimal example dataset for demo purposes
+        st.error("❌ No dataset found! Please ensure dataset file exists in the data/ directory.")
+        st.info("💡 Tip: Place your dataset file as 'data/dataset.csv.csv' or 'data/dataset.csv'")
+        
+        # Create minimal example dataset
+        df = pd.DataFrame({
+            'Date': pd.date_range(start='2020-01-01', periods=10, freq='M'),
+            'Operator': [f'Airline_{i}' for i in range(10)],
+            'Location': [f'Location_{i}' for i in range(10)],
+            'Type': [f'Type_{i}' for i in range(10)],
+            'Aboard': [100 + i*10 for i in range(10)],
+            'Fatalities': [i*5 for i in range(10)],
+            'Ground': [0 for i in range(10)],
+            'Summary': [f'Crash summary {i}' for i in range(10)]
+        })
+        
+        # Show warning about demo data
+        st.warning("⚠️ Using demo data. The dashboard will work but with limited functionality.")
+    
+    # Process the data (same as before)
     df.columns = [c.strip() for c in df.columns]
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df = df.dropna(subset=['Date'])
@@ -979,6 +1025,78 @@ def create_cost_analysis(df, selected_year=None):
     
     return cost_fig, risk_fig
 
+def create_day_of_week_analysis(df, selected_years=None):
+    """Day of week analysis with enhanced tooltips"""
+    filtered_df = df
+    if selected_years:
+        filtered_df = df[df['year'].between(selected_years[0], selected_years[1])]
+    
+    # Group by day of week
+    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    day_stats = filtered_df.groupby('day_name').agg({
+        'Date': 'count',
+        'Fatalities': 'sum',
+        'Aboard': 'sum'
+    }).reindex(day_order).fillna(0)
+    day_stats.columns = ['crashes', 'fatalities', 'aboard']
+    
+    # Calculate averages
+    day_stats['avg_fatalities'] = day_stats['fatalities'] / day_stats['crashes'].replace(0, 1)
+    day_stats['survival_rate'] = ((day_stats['aboard'] - day_stats['fatalities']) / day_stats['aboard'].replace(0, 1) * 100).fillna(0)
+    
+    # Enhanced hover text
+    hover_texts = [
+        f"<b>📅 {day}</b><br>"
+        f"<b>✈️ Total Crashes:</b> {int(day_stats.loc[day, 'crashes'])}<br>"
+        f"<b>💀 Total Fatalities:</b> {int(day_stats.loc[day, 'fatalities'])}<br>"
+        f"<b>📊 Avg Fatalities/Crash:</b> {day_stats.loc[day, 'avg_fatalities']:.1f}<br>"
+        f"<b>✅ Survival Rate:</b> {day_stats.loc[day, 'survival_rate']:.1f}%<br>"
+        f"<b>🎲 Risk Level:</b> {'High' if day_stats.loc[day, 'crashes'] > day_stats['crashes'].median() else 'Low'}"
+        for day in day_order
+    ]
+    
+    fig = go.Figure()
+    
+    # Add crashes bars
+    fig.add_trace(go.Bar(
+        x=day_order,
+        y=day_stats['crashes'],
+        name='Crashes',
+        marker=dict(
+            color=day_stats['crashes'],
+            colorscale=[[0, COLORS['success']], [0.5, COLORS['warning']], [1, COLORS['danger']]],
+            line=dict(color='white', width=2)
+        ),
+        text=[f"{int(val)}" for val in day_stats['crashes']],
+        textposition='outside',
+        textfont=dict(size=14, color=COLORS['text'], family='Arial Black'),
+        hovertext=hover_texts,
+        hovertemplate="%{hovertext}<extra></extra>"
+    ))
+    
+    year_text = f" ({selected_years[0]}-{selected_years[1]})" if selected_years else " (All Years)"
+    fig.update_layout(
+        title=dict(
+            text=f"📅 Crashes by Day of Week{year_text}",
+            font=dict(size=22, color=COLORS['text'])
+        ),
+        xaxis=dict(
+            title=dict(text="Day of Week", font=dict(size=16)),
+            tickfont=dict(size=14)
+        ),
+        yaxis=dict(
+            title=dict(text="Number of Crashes", font=dict(size=16)),
+            tickfont=dict(size=14)
+        ),
+        height=500,
+        paper_bgcolor=COLORS['light_bg'],
+        plot_bgcolor='white',
+        font=dict(color=COLORS['text'], size=14)
+    )
+    
+    return fig, day_stats
+
+
 def create_survival_analysis_chart(df, selected_years=None):
     """Survival rate analysis with enhanced tooltips"""
     filtered_df = df
@@ -1031,7 +1149,7 @@ def create_survival_analysis_chart(df, selected_years=None):
     year_text = f" ({selected_years[0]}-{selected_years[1]})" if selected_years else " (All Years)"
     fig.update_layout(
         title=dict(
-            text=f"📅 Crashes by Day of Week{year_text}",
+            text=f"🛡️ Survival Rate Analysis by Day of Week{year_text}",
             font=dict(size=22, color=COLORS['text'])
         ),
         xaxis=dict(
@@ -1877,7 +1995,7 @@ def main():
         
         with col_left:
             st.markdown("#### 📆 Day of Week Analysis")
-            day_fig, day_stats = create_day_of_week_analysis(df, stat_year_range)
+            day_fig, day_stats = create_survival_analysis_chart(df, stat_year_range)
             st.plotly_chart(day_fig, use_container_width=True)
             
             # Show insights

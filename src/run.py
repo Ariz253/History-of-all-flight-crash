@@ -28,11 +28,29 @@ def install_dependencies():
 
 def check_dataset():
     """Check if dataset file exists"""
-    if not os.path.exists("data\dataset.csv.csv"):
-        print("❌ Error: dataset.csv.csv not found")
-        print("Please ensure the dataset file is in the project directory")
+    # Check for multiple possible file paths and use OS-appropriate path separators
+    possible_paths = [
+        os.path.join("data", "dataset.csv.csv"),
+        os.path.join("data", "dataset.csv"),
+        "data/dataset.csv.csv",
+        "data/dataset.csv",
+        "dataset.csv.csv",
+        "dataset.csv"
+    ]
+    
+    dataset_found = False
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"✅ Dataset file found: {path}")
+            dataset_found = True
+            break
+    
+    if not dataset_found:
+        print("❌ Error: No dataset file found")
+        print("Please ensure one of these files exists in the project:")
+        for path in possible_paths:
+            print(f"  - {path}")
         sys.exit(1)
-    print("✅ Dataset file found")
 
 def run_dashboard():
     """Launch the Streamlit dashboard"""
